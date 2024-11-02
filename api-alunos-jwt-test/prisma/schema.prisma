@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Students {
+  id    String @id @default(uuid()) @db.Uuid
+  name  String @db.VarChar(100)
+  email String @unique
+  user  Users?
+  type  Type   @default(M)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registrations Registrations[]
+  avaliations   Avaliations[]
+
+  @@map("students")
+}
+
+model Users {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String?
+  password  String   @db.VarChar(100)
+  enable    Boolean  @default(true)
+  studentId String   @unique @map("student_id") @db.Uuid
+  student   Students @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Classrooms {
+  id        String @id @default(uuid()) @db.Uuid
+  subject   String @db.VarChar(100)
+  vacations Int    @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registrations Registrations[]
+
+  @@map("classrooms")
+}
+
+model Registrations {
+  id          String     @id @default(uuid()) @db.Uuid
+  studentId   String     @map("student_id") @db.Uuid
+  student     Students   @relation(fields: [studentId], references: [id])
+  classroomId String     @map("classroom_id") @db.Uuid
+  classroom   Classrooms @relation(fields: [classroomId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("registrations")
+}
+
+model Avaliations {
+  id        String   @id @default(uuid()) @db.Uuid
+  module    String   @db.VarChar(100)
+  studentId String   @map("student_id") @db.Uuid
+  student   Students @relation(fields: [studentId], references: [id])
+  grade     String   @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("avaliations")
+}
+
+enum Type {
+  M
+  T
+  F
+
+  @@map("type")
+}
